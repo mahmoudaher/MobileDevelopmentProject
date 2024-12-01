@@ -1,5 +1,5 @@
 import React, { useState, useRef, useCallback } from "react";
-import { View, Text, StyleSheet, Alert, TouchableOpacity } from "react-native";
+import { View, Text, StyleSheet, Alert, TouchableOpacity, TextInput } from "react-native";
 import { Picker } from "@react-native-picker/picker";
 import { saveSession } from "../database/db";
 
@@ -28,22 +28,40 @@ const COLORS = {
 };
 
 export default function Home() {
-  const [seconds, setSeconds] = useState<number>(0);
+  const [seconds, setSeconds] = useState<number>(25 * 60);
   const [running, setRunning] = useState<boolean>(false);
   const [category, setCategory] = useState<Category>("Study");
   const [distractions, setDistractions] = useState<number>(0);
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [durationMinutes, setDurationMinutes] = useState<number>(25);
+  const [initialSeconds, setInitialSeconds] = useState<number>(25 * 60);
 
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const startTimer = useCallback(() => {
     if (running) return;
 
+    const initSec = durationMinutes * 60;
+    setInitialSeconds(initSec);
+    setSeconds(initSec);
     setRunning(true);
     intervalRef.current = setInterval(() => {
-      setSeconds((s) => s + 1);
+      setSeconds((s) => {
+        if (s <= 1) {
+          clearInterval(intervalRef.current!);
+          setRunning(false);
+          handleSessionEnd();
+          return 0;
+        }
+        return s - 1;
+      });
     }, 1000) as unknown as NodeJS.Timeout;
-  }, [running]);
+  }, [running, durationMinutes]);
+
+  const pauseTimer = useCallback(() => {
+    if (intervalRef.current) clearInterval(intervalRef.current);
+    setRunning(false);
+  }, []);
 
   const stopTimer = useCallback(async () => {
     if (intervalRef.current) clearInterval(intervalRef.current);
@@ -51,16 +69,17 @@ export default function Home() {
     setIsLoading(true);
 
     try {
+      const elapsed = initialSeconds - seconds;
       const date = new Date().toISOString().split("T")[0];
-      await saveSession(seconds, category, distractions, date);
+      await saveSession(elapsed, category, distractions, date);
 
       Alert.alert(
         "✓ Session Saved",
-        `${Math.floor(seconds / 60)}m ${
-          seconds % 60
-        }s focus session in ${category} category`
+        `Focused for ${Math.floor(elapsed / 60)}m ${
+          elapsed % 60
+        }s in ${category} category with ${distractions} distractions`
       );
-      setSeconds(0);
+      setSeconds(initialSeconds);
       setDistractions(0);
     } catch (error) {
       Alert.alert("✕ Error", "Failed to save session. Please try again.");
@@ -68,18 +87,41 @@ export default function Home() {
     } finally {
       setIsLoading(false);
     }
-  }, [seconds, category, distractions]);
+  }, [initialSeconds, seconds, category, distractions]);
 
   const resetTimer = useCallback(() => {
     if (intervalRef.current) clearInterval(intervalRef.current);
-    setSeconds(0);
+    setSeconds(initialSeconds);
     setDistractions(0);
     setRunning(false);
-  }, []);
+  }, [initialSeconds]);
+
+  const handleSessionEnd = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const elapsed = initialSeconds;
+      const date = new Date().toISOString().split("T")[0];
+      await saveSession(elapsed, category, distractions, date);
+
+      Alert.alert(
+        "✓ Session Completed",
+        `Focused for ${Math.floor(elapsed / 60)}m ${
+          elapsed % 60
+        }s in ${category} category with ${distractions} distractions`
+      );
+      setSeconds(initialSeconds);
+      setDistractions(0);
+    } catch (error) {
+      Alert.alert("✕ Error", "Failed to save session. Please try again.");
+      console.error("Save session error:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [initialSeconds, category, distractions]);
 
   const minutes = Math.floor(seconds / 60);
   const secs = seconds % 60;
-  const progress = (seconds % 60) / 60;
+  const progress = initialSeconds > 0 ? (initialSeconds - seconds) / initialSeconds : 0;
 
   return (
     <View style={styles.container}>
@@ -90,11 +132,13 @@ export default function Home() {
 
       <View style={styles.timerCard}>
         <View style={styles.timerContent}>
-          <Text style={styles.timerLabel}>Session Time</Text>
+          <Text style={styles.timerLabel}>Time Remaining</Text>
           <Text style={styles.timer}>
             {String(minutes).padStart(2, "0")}:{String(secs).padStart(2, "0")}
           </Text>
-          <Text style={styles.secondsDisplay}>{seconds} seconds elapsed</Text>
+          <Text style={styles.secondsDisplay}>
+            {running ? `${Math.floor((initialSeconds - seconds) / 60)}m ${((initialSeconds - seconds) % 60)}s elapsed` : `${durationMinutes} minutes session`}
+          </Text>
         </View>
 
         <View style={styles.progressBar}>
@@ -105,12 +149,25 @@ export default function Home() {
       </View>
 
       <View style={styles.card}>
+        <Text style={styles.cardLabel}>Session Duration (minutes)</Text>
+        <TextInput
+          style={styles.input}
+          keyboardType="numeric"
+          value={durationMinutes.toString()}
+          onChangeText={(text) => setDurationMinutes(parseInt(text) || 25)}
+          editable={!running}
+          placeholder="25"
+        />
+      </View>
+
+      <View style={styles.card}>
         <Text style={styles.cardLabel}>Focus Category</Text>
         <View style={styles.pickerContainer}>
           <Picker
             selectedValue={category}
             onValueChange={(value) => setCategory(value as Category)}
             style={styles.picker}
+            enabled={!running}
           >
             {CATEGORIES.map((cat) => (
               <Picker.Item
@@ -153,21 +210,29 @@ export default function Home() {
         <TouchableOpacity
           style={[
             styles.button,
-            running ? styles.buttonStop : styles.buttonStart,
+            running ? styles.buttonPause : styles.buttonStart,
             isLoading && styles.buttonDisabled,
           ]}
-          onPress={running ? stopTimer : startTimer}
+          onPress={running ? pauseTimer : startTimer}
           disabled={isLoading}
         >
           <Text style={styles.buttonText}>
-            {running ? "⏸ Pause Session" : "▶ Start Focus"}
+            {running ? "⏸ Pause" : "▶ Start"}
           </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.button, styles.buttonStop]}
+          onPress={stopTimer}
+          disabled={isLoading || (!running && seconds === initialSeconds)}
+        >
+          <Text style={styles.buttonText}>⏹ Stop & Save</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
           style={[styles.button, styles.buttonReset]}
           onPress={resetTimer}
-          disabled={seconds === 0}
+          disabled={seconds === initialSeconds && !running}
         >
           <Text style={styles.buttonText}>↻ Reset</Text>
         </TouchableOpacity>
@@ -281,6 +346,16 @@ const styles = StyleSheet.create({
     height: 50,
     color: COLORS.text,
   },
+  input: {
+    height: 50,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    fontSize: 16,
+    color: COLORS.text,
+    backgroundColor: COLORS.background,
+  },
   distractionsBox: {
     flexDirection: "row",
     alignItems: "center",
@@ -350,10 +425,11 @@ const styles = StyleSheet.create({
   },
   buttonStop: {
     backgroundColor: COLORS.danger,
+    flex: 1,
   },
   buttonReset: {
     backgroundColor: COLORS.warning,
-    flex: 0.4,
+    flex: 1,
   },
   buttonDisabled: {
     opacity: 0.6,
