@@ -1,5 +1,13 @@
 import React, { useState, useRef, useCallback, useEffect } from "react";
-import { View, Text, StyleSheet, Alert, TouchableOpacity, TextInput, AppState } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  Alert,
+  TouchableOpacity,
+  TextInput,
+  AppState,
+} from "react-native";
 import { Picker } from "@react-native-picker/picker";
 import { saveSession } from "../database/db";
 
@@ -41,12 +49,20 @@ export default function Home() {
   const appStateRef = useRef(AppState.currentState);
 
   useEffect(() => {
-    const subscription = AppState.addEventListener('change', (nextAppState) => {
-      if (appStateRef.current === 'active' && nextAppState === 'background' && running) {
+    const subscription = AppState.addEventListener("change", (nextAppState) => {
+      if (
+        appStateRef.current === "active" &&
+        nextAppState === "background" &&
+        running
+      ) {
         setWasRunning(true);
         pauseTimer();
-        setDistractions(prev => prev + 1);
-      } else if (appStateRef.current === 'background' && nextAppState === 'active' && wasRunning) {
+        setDistractions((prev) => prev + 1);
+      } else if (
+        appStateRef.current === "background" &&
+        nextAppState === "active" &&
+        wasRunning
+      ) {
         setWasRunning(false);
         Alert.alert(
           "Resume Session?",
@@ -146,7 +162,8 @@ export default function Home() {
 
   const minutes = Math.floor(seconds / 60);
   const secs = seconds % 60;
-  const progress = initialSeconds > 0 ? (initialSeconds - seconds) / initialSeconds : 0;
+  const progress =
+    initialSeconds > 0 ? (initialSeconds - seconds) / initialSeconds : 0;
 
   return (
     <View style={styles.container}>
@@ -162,7 +179,11 @@ export default function Home() {
             {String(minutes).padStart(2, "0")}:{String(secs).padStart(2, "0")}
           </Text>
           <Text style={styles.secondsDisplay}>
-            {running ? `${Math.floor((initialSeconds - seconds) / 60)}m ${((initialSeconds - seconds) % 60)}s elapsed` : `${durationMinutes} minutes session`}
+            {running
+              ? `${Math.floor((initialSeconds - seconds) / 60)}m ${
+                  (initialSeconds - seconds) % 60
+                }s elapsed`
+              : `${durationMinutes} minutes session`}
           </Text>
         </View>
 
@@ -278,7 +299,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.background,
     paddingHorizontal: 16,
     paddingTop: 12,
-    paddingBottom: 20,
+    paddingBottom: 40,
   },
   header: {
     marginBottom: 28,
@@ -301,7 +322,7 @@ const styles = StyleSheet.create({
     borderLeftColor: COLORS.primary,
     borderRadius: 16,
     padding: 24,
-    marginBottom: 20,
+    marginBottom: 30,
     borderWidth: 1,
     borderColor: `${COLORS.primary}30`,
   },
@@ -430,7 +451,7 @@ const styles = StyleSheet.create({
   buttonGroup: {
     flexDirection: "row",
     gap: 12,
-    marginBottom: 16,
+    marginBottom: 24,
   },
   button: {
     flex: 1,
