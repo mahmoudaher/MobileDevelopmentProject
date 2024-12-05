@@ -52,9 +52,9 @@ export default function Dashboard() {
     let distractionSum = 0;
 
     data.forEach((s) => {
-      allSum += s.duration;
-      if (s.date === today) todaySum += s.duration;
-      distractionSum += s.distractions;
+      allSum += s.duration || 0;
+      if (s.date === today) todaySum += s.duration || 0;
+      distractionSum += s.distractions || 0;
     });
 
     setTodayTotal(todaySum);
@@ -102,7 +102,7 @@ export default function Dashboard() {
     const values = days.map((d) => {
       const total = sessions
         .filter((s) => s.date === d.date)
-        .reduce((sum, s) => sum + s.duration, 0);
+        .reduce((sum, s) => sum + (s.duration || 0), 0);
 
       return Math.floor(total / 60);
     });
@@ -116,7 +116,7 @@ export default function Dashboard() {
   const categoryMap: Record<string, number> = {};
   sessions.forEach((s) => {
     if (!categoryMap[s.category]) categoryMap[s.category] = 0;
-    categoryMap[s.category] += s.duration;
+    categoryMap[s.category] += s.duration || 0;
   });
 
   const chartColors = [
