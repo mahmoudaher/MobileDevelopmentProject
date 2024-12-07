@@ -16,7 +16,7 @@ const CATEGORIES = [
   { label: "Study", value: "Study" },
   { label: "Work", value: "Work" },
   { label: "Sport", value: "Sport" },
-  { label: "Programming", value: "Programming" },
+  { label: "Programming", value: "" },
   { label: "Other", value: "Other" },
 ] as const;
 
