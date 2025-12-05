@@ -116,7 +116,7 @@ export default function Dashboard() {
   const categoryMap: Record<string, number> = {};
   sessions.forEach((s) => {
     if (!categoryMap[s.category]) categoryMap[s.category] = 0;
-    categoryMap[s.category] += 1;
+    categoryMap[s.category] += s.duration;
   });
 
   const chartColors = [
