@@ -1,5 +1,5 @@
-import React, { useState, useRef, useCallback } from "react";
-import { View, Text, StyleSheet, Alert, TouchableOpacity, TextInput } from "react-native";
+import React, { useState, useRef, useCallback, useEffect } from "react";
+import { View, Text, StyleSheet, Alert, TouchableOpacity, TextInput, AppState } from "react-native";
 import { Picker } from "@react-native-picker/picker";
 import { saveSession } from "../database/db";
 
@@ -35,8 +35,33 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [durationMinutes, setDurationMinutes] = useState<number>(25);
   const [initialSeconds, setInitialSeconds] = useState<number>(25 * 60);
+  const [wasRunning, setWasRunning] = useState<boolean>(false);
 
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const appStateRef = useRef(AppState.currentState);
+
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', (nextAppState) => {
+      if (appStateRef.current === 'active' && nextAppState === 'background' && running) {
+        setWasRunning(true);
+        pauseTimer();
+        setDistractions(prev => prev + 1);
+      } else if (appStateRef.current === 'background' && nextAppState === 'active' && wasRunning) {
+        setWasRunning(false);
+        Alert.alert(
+          "Resume Session?",
+          "You left the app and a distraction was counted. Resume the timer?",
+          [
+            { text: "No", style: "cancel" },
+            { text: "Yes", onPress: startTimer },
+          ]
+        );
+      }
+      appStateRef.current = nextAppState;
+    });
+
+    return () => subscription?.remove();
+  }, [running, wasRunning]);
 
   const startTimer = useCallback(() => {
     if (running) return;
