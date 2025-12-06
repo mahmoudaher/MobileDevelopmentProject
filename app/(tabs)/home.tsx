@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   TextInput,
   AppState,
+  ScrollView,
 } from "react-native";
 import { Picker } from "@react-native-picker/picker";
 import { saveSession } from "../database/db";
@@ -166,7 +167,10 @@ export default function Home() {
     initialSeconds > 0 ? (initialSeconds - seconds) / initialSeconds : 0;
 
   return (
-    <View style={styles.container}>
+    <ScrollView
+      style={{ flex: 1, backgroundColor: COLORS.background }}
+      contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 12, paddingBottom: 40 }}
+    >
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Focus Timer</Text>
         <Text style={styles.headerSubtitle}>Stay focused, achieve more</Text>
@@ -289,18 +293,11 @@ export default function Home() {
           {running ? "⏱️  Timer is running..." : "📍 Ready to focus"}
         </Text>
       </View>
-    </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: COLORS.background,
-    paddingHorizontal: 16,
-    paddingTop: 12,
-    paddingBottom: 40,
-  },
   header: {
     marginBottom: 28,
     marginTop: 8,
