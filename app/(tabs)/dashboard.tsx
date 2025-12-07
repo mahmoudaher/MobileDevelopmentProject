@@ -140,13 +140,21 @@ export default function Dashboard() {
     "#06b6d4",
   ];
 
-  const pieData = Object.keys(categoryMap).map((cat, index) => ({
-    name: cat,
-    population: categoryMap[cat],
-    color: chartColors[index % chartColors.length],
-    legendFontColor: COLORS.text,
-    legendFontSize: 13,
-  }));
+  const pieData = Object.keys(categoryMap)
+    .filter((cat) => categoryMap[cat] > 0)
+    .map((cat, index) => ({
+      name: cat,
+      population: categoryMap[cat] ?? 0,
+      color: chartColors[index % chartColors.length],
+      legendFontColor: COLORS.text,
+      legendFontSize: 13,
+    }));
+
+  console.log('pieData:', pieData);
+
+  const barData = buildWeeklyData();
+
+  console.log('barData:', barData);
 
   return (
     <ScrollView
@@ -194,29 +202,31 @@ export default function Dashboard() {
       <View style={styles.chartSection}>
         <Text style={styles.sectionTitle}>Weekly Activity</Text>
         <View style={styles.chartContainer}>
-          <BarChart
-            data={buildWeeklyData()}
-            width={Dimensions.get("window").width - 40}
-            height={240}
-            yAxisLabel=""
-            yAxisSuffix=" min"
-            chartConfig={{
-              backgroundColor: COLORS.surface,
-              backgroundGradientFrom: COLORS.surface,
-              backgroundGradientTo: COLORS.surface,
-              color: (opacity = 1) => `rgba(99, 102, 241, ${opacity})`,
-              labelColor: () => COLORS.textSecondary,
-              decimalPlaces: 0,
-              style: {
-                borderRadius: 12,
-              },
-            }}
-            style={{ borderRadius: 12 }}
-          />
+          {barData && barData.datasets && barData.datasets[0] && barData.datasets[0].data.every(d => typeof d === 'number' && !isNaN(d)) && (
+            <BarChart
+              data={barData}
+              width={Math.max(Dimensions.get("window").width - 40, 300)}
+              height={240}
+              yAxisLabel=""
+              yAxisSuffix=" min"
+              chartConfig={{
+                backgroundColor: COLORS.surface,
+                backgroundGradientFrom: COLORS.surface,
+                backgroundGradientTo: COLORS.surface,
+                color: (opacity = 1) => `rgba(99, 102, 241, ${opacity})`,
+                labelColor: () => COLORS.textSecondary,
+                decimalPlaces: 0,
+                style: {
+                  borderRadius: 12,
+                },
+              }}
+              style={{ borderRadius: 12 }}
+            />
+          )}
         </View>
       </View>
 
-      {pieData.length > 0 && (
+      {pieData && pieData.length > 0 && pieData.every(item => item.color && typeof item.population === 'number' && !isNaN(item.population)) && (
         <View style={styles.chartSection}>
           <Text style={styles.sectionTitle}>Categories Breakdown</Text>
           <View style={styles.chartContainer}>
