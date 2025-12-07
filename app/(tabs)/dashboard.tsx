@@ -36,8 +36,8 @@ export default function Dashboard() {
 
   const loadSessions = async () => {
     const data = await fetchAllSessions();
-    setSessions(data);
-    calculateStatistics(data);
+    setSessions(data || []);
+    calculateStatistics(data || []);
   };
 
   useEffect(() => {
@@ -45,6 +45,12 @@ export default function Dashboard() {
   }, []);
 
   const calculateStatistics = (data: Session[]) => {
+    if (!data || data.length === 0) {
+      setTodayTotal(0);
+      setAllTimeTotal(0);
+      setTotalDistractions(0);
+      return;
+    }
     const today = new Date().toISOString().split("T")[0];
 
     let todaySum = 0;
@@ -100,8 +106,9 @@ export default function Dashboard() {
     const days = getLast7Days();
 
     const values = days.map((d) => {
+      if (!sessions) return 0;
       const total = sessions
-        .filter((s) => s.date === d.date)
+        .filter((s) => s && s.date === d.date)
         .reduce((sum, s) => sum + (s.duration || 0), 0);
 
       return Math.floor(total / 60);
@@ -114,10 +121,14 @@ export default function Dashboard() {
   };
 
   const categoryMap: Record<string, number> = {};
-  sessions.forEach((s) => {
-    if (!categoryMap[s.category]) categoryMap[s.category] = 0;
-    categoryMap[s.category] += s.duration || 0;
-  });
+  if (sessions) {
+    sessions.forEach((s) => {
+      if (s && s.category) {
+        if (!categoryMap[s.category]) categoryMap[s.category] = 0;
+        categoryMap[s.category] += s.duration || 0;
+      }
+    });
+  }
 
   const chartColors = [
     "#6366f1",
