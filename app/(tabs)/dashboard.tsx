@@ -150,11 +150,18 @@ export default function Dashboard() {
       legendFontSize: 13,
     }));
 
-  console.log('pieData:', pieData);
+  console.log("pieData:", pieData);
 
   const barData = buildWeeklyData();
 
-  console.log('barData:', barData);
+  console.log("barData:", barData);
+
+  const chartConfig = {
+    backgroundGradientFrom: COLORS.surface,
+    backgroundGradientTo: COLORS.surface,
+    color: (opacity = 1) => `rgba(99, 102, 241, ${opacity})`,
+    labelColor: (opacity = 1) => COLORS.textSecondary,
+  };
 
   return (
     <ScrollView
@@ -202,46 +209,59 @@ export default function Dashboard() {
       <View style={styles.chartSection}>
         <Text style={styles.sectionTitle}>Weekly Activity</Text>
         <View style={styles.chartContainer}>
-          {barData && barData.datasets && barData.datasets[0] && barData.datasets[0].data.every(d => typeof d === 'number' && !isNaN(d)) && (
-            <BarChart
-              data={barData}
-              width={Math.max(Dimensions.get("window").width - 40, 300)}
-              height={240}
-              yAxisLabel=""
-              yAxisSuffix=" min"
-              chartConfig={{
-                backgroundColor: COLORS.surface,
-                backgroundGradientFrom: COLORS.surface,
-                backgroundGradientTo: COLORS.surface,
-                color: (opacity = 1) => `rgba(99, 102, 241, ${opacity})`,
-                labelColor: () => COLORS.textSecondary,
-                decimalPlaces: 0,
-                style: {
-                  borderRadius: 12,
-                },
-              }}
-              style={{ borderRadius: 12 }}
-            />
-          )}
+          {barData &&
+            barData.datasets &&
+            barData.datasets[0] &&
+            barData.datasets[0].data.every(
+              (d) => typeof d === "number" && !isNaN(d)
+            ) && (
+              <BarChart
+                data={barData}
+                width={Math.max(Dimensions.get("window").width - 40, 300)}
+                height={240}
+                yAxisLabel=""
+                yAxisSuffix=" min"
+                chartConfig={{
+                  backgroundColor: COLORS.surface,
+                  backgroundGradientFrom: COLORS.surface,
+                  backgroundGradientTo: COLORS.surface,
+                  color: (opacity = 1) => `rgba(99, 102, 241, ${opacity})`,
+                  labelColor: () => COLORS.textSecondary,
+                  decimalPlaces: 0,
+                  style: {
+                    borderRadius: 12,
+                  },
+                }}
+                style={{ borderRadius: 12 }}
+              />
+            )}
         </View>
       </View>
 
-      {pieData && pieData.length > 0 && pieData.every(item => item.color && typeof item.population === 'number' && !isNaN(item.population)) && (
-        <View style={styles.chartSection}>
-          <Text style={styles.sectionTitle}>Categories Breakdown</Text>
-          <View style={styles.chartContainer}>
-            <PieChart
-              data={pieData}
-              width={Dimensions.get("window").width - 40}
-              height={220}
-              accessor="population"
-              backgroundColor="transparent"
-              paddingLeft="0"
-              absolute
-            />
+      {pieData &&
+        pieData.length > 0 &&
+        pieData.every(
+          (item) =>
+            item.color &&
+            typeof item.population === "number" &&
+            !isNaN(item.population)
+        ) && (
+          <View style={styles.chartSection}>
+            <Text style={styles.sectionTitle}>Categories Breakdown</Text>
+            <View style={styles.chartContainer}>
+              <PieChart
+                data={pieData}
+                width={Dimensions.get("window").width - 40}
+                height={220}
+                accessor="population"
+                backgroundColor="transparent"
+                paddingLeft="0"
+                chartConfig={chartConfig}
+                absolute
+              />
+            </View>
           </View>
-        </View>
-      )}
+        )}
 
       {sessions.length === 0 && (
         <View style={styles.emptyState}>
