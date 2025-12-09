@@ -16,6 +16,7 @@ const CATEGORIES = [
   { label: "Study", value: "Study" },
   { label: "Work", value: "Work" },
   { label: "Sport", value: "Sport" },
+  { label: "Programming", value: "Programming" },
   { label: "Other", value: "Other" },
 ] as const;
 
@@ -177,7 +178,7 @@ export default function Home() {
     >
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Focus Timer</Text>
-        <Text style={styles.headerSubtitle}>Stay focused, achieve more</Text>
+        <Text style={styles.headerSubtitle}>Stay focused</Text>
       </View>
 
       <View style={styles.timerCard}>
@@ -226,7 +227,7 @@ export default function Home() {
             {CATEGORIES.map((cat) => (
               <Picker.Item
                 key={cat.value}
-                label={`📌 ${cat.label}`}
+                label={` ${cat.label}`}
                 value={cat.value}
               />
             ))}
@@ -294,7 +295,7 @@ export default function Home() {
 
       <View style={styles.footer}>
         <Text style={styles.footerText}>
-          {running ? "⏱️  Timer is running..." : "📍 Ready to focus"}
+          {running ? "⏱️  Timer is running..." : " Ready to focus"}
         </Text>
       </View>
     </ScrollView>
