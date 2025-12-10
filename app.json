@@ -8,6 +8,7 @@
     "scheme": "focusapp",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
+    "projectId": "focus-app-project-id",
     "ios": {
       "supportsTablet": true
     },
@@ -39,7 +40,8 @@
           }
         }
       ],
-      "expo-sqlite"
+      "expo-sqlite",
+      "expo-notifications"
     ],
     "experiments": {
       "typedRoutes": true,

@@ -28,7 +28,7 @@ export default function CategoryPieChart({ pieData }: CategoryPieChartProps) {
     backgroundGradientFrom: COLORS.surface,
     backgroundGradientTo: COLORS.surface,
     color: (opacity = 1) => `rgba(99, 102, 241, ${opacity})`,
-    labelColor: (opacity = 1) => COLORS.textSecondary,
+    labelColor: (opacity = 1) => "#ffffff",
   };
 
   if (!pieData || pieData.length === 0) return null;

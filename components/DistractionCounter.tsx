@@ -31,26 +31,14 @@ export default function DistractionCounter({
     <View style={styles.card}>
       <Text style={styles.cardLabel}>Distractions Counted</Text>
       <View style={styles.distractionsBox}>
-        <TouchableOpacity
-          style={[styles.counterButton, styles.decreaseBtn]}
-          onPress={() => setDistractions(Math.max(0, distractions - 1))}
-          disabled={running || distractions === 0}
-        >
-          <Text style={styles.counterButtonText}>−</Text>
-        </TouchableOpacity>
+   
 
         <View style={styles.distractionsDisplay}>
           <Text style={styles.distractionsValue}>{distractions}</Text>
           <Text style={styles.distractionsLabel}>times</Text>
         </View>
 
-        <TouchableOpacity
-          style={[styles.counterButton, styles.increaseBtn]}
-          onPress={() => setDistractions(distractions + 1)}
-          disabled={running}
-        >
-          <Text style={styles.counterButtonText}>+</Text>
-        </TouchableOpacity>
+      
       </View>
     </View>
   );
@@ -94,16 +82,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     fontWeight: "bold",
   },
-  decreaseBtn: {
-    backgroundColor: `${COLORS.danger}15`,
-    borderWidth: 1,
-    borderColor: COLORS.danger,
-  },
-  increaseBtn: {
-    backgroundColor: `${COLORS.success}15`,
-    borderWidth: 1,
-    borderColor: COLORS.success,
-  },
+
   counterButtonText: {
     fontSize: 24,
     fontWeight: "bold",

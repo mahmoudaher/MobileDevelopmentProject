@@ -20,6 +20,12 @@ export const createTables = async (): Promise<void> => {
         distractions INTEGER NOT NULL DEFAULT 0,
         date TEXT NOT NULL
       );
+
+      CREATE TABLE IF NOT EXISTS custom_categories (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL UNIQUE,
+        created_at TEXT NOT NULL
+      );
     `);
     console.log("Database tables created successfully");
   } catch (error) {
@@ -83,6 +89,46 @@ export const deleteSession = async (id: number): Promise<void> => {
     await db.runAsync("DELETE FROM sessions WHERE id = ?;", [id]);
   } catch (error) {
     console.error("Error deleting session:", error);
+    throw error;
+  }
+};
+
+// Custom Categories functions
+export const saveCustomCategory = async (name: string): Promise<void> => {
+  try {
+    if (!name || name.trim().length === 0) {
+      throw new Error("Category name is required");
+    }
+
+    const trimmedName = name.trim();
+    await db.runAsync(
+      `INSERT OR IGNORE INTO custom_categories (name, created_at)
+       VALUES (?, ?);`,
+      [trimmedName, new Date().toISOString()]
+    );
+  } catch (error) {
+    console.error("Error saving custom category:", error);
+    throw error;
+  }
+};
+
+export const fetchCustomCategories = async (): Promise<string[]> => {
+  try {
+    const result = await db.getAllAsync<{ name: string }>(
+      "SELECT name FROM custom_categories ORDER BY created_at DESC;"
+    );
+    return result?.map((row) => row.name) || [];
+  } catch (error) {
+    console.error("Error fetching custom categories:", error);
+    throw error;
+  }
+};
+
+export const deleteCustomCategory = async (name: string): Promise<void> => {
+  try {
+    await db.runAsync("DELETE FROM custom_categories WHERE name = ?;", [name]);
+  } catch (error) {
+    console.error("Error deleting custom category:", error);
     throw error;
   }
 };

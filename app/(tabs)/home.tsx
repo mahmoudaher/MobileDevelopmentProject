@@ -13,16 +13,13 @@ import { saveSession } from "../database/db";
 import TimerDisplay from "../../components/TimerDisplay";
 import DistractionCounter from "../../components/DistractionCounter";
 import CategoryPicker from "../../components/CategoryPicker";
+import {
+  registerForPushNotificationsAsync,
+  scheduleSessionEndNotification,
+  scheduleBackgroundNotification,
+} from "../../services/notifications";
 
-const CATEGORIES = [
-  { label: "Study", value: "Study" },
-  { label: "Work", value: "Work" },
-  { label: "Sport", value: "Sport" },
-  { label: "Programming", value: "" },
-  { label: "Other", value: "Other" },
-] as const;
-
-type Category = (typeof CATEGORIES)[number]["value"];
+type Category = string;
 
 const COLORS = {
   primary: "#6366f1",
@@ -53,6 +50,9 @@ export default function Home() {
   const appStateRef = useRef(AppState.currentState);
 
   useEffect(() => {
+    // Register for push notifications
+    registerForPushNotificationsAsync();
+
     const subscription = AppState.addEventListener("change", (nextAppState) => {
       if (
         appStateRef.current === "active" &&
@@ -62,6 +62,8 @@ export default function Home() {
         setWasRunning(true);
         pauseTimer();
         setDistractions((prev) => prev + 1);
+        // Schedule background notification
+        scheduleBackgroundNotification();
       } else if (
         appStateRef.current === "background" &&
         nextAppState === "active" &&
@@ -153,6 +155,9 @@ export default function Home() {
       const elapsed = initialSeconds;
       const date = new Date().toISOString().split("T")[0];
       await saveSession(elapsed, category, distractions, date);
+
+      // Schedule session end notification
+      await scheduleSessionEndNotification();
 
       Alert.alert(
         "✓ Session Completed",

@@ -179,14 +179,14 @@ export default function Dashboard() {
           label="Today"
           value={formatDuration(todayTotal)}
           subtext="focused time"
-          style={[styles.statCard1]}
+          style={[styles.statCard]}
         />
 
         <StatCard
           label="Total"
           value={formatMinutes(allTimeTotal)}
           subtext="minutes"
-          style={[styles.statCard2]}
+          style={[styles.statCard]}
         />
       </View>
 
@@ -260,7 +260,6 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   distractionsCard: {
-    backgroundColor: `${COLORS.danger}08`,
     borderColor: `${COLORS.danger}30`,
   },
   cardHeader: {
