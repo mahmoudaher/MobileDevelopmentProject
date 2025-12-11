@@ -8,7 +8,9 @@ import {
   RefreshControl,
 } from "react-native";
 import { fetchAllSessions, type Session } from "../database/db";
-import { PieChart, BarChart } from "react-native-chart-kit";
+import StatCard from "../../components/StatCard";
+import WeeklyBarChart from "../../components/WeeklyBarChart";
+import CategoryPieChart from "../../components/CategoryPieChart";
 
 const COLORS = {
   primary: "#6366f1",
@@ -156,13 +158,6 @@ export default function Dashboard() {
 
   console.log("barData:", barData);
 
-  const chartConfig = {
-    backgroundGradientFrom: COLORS.surface,
-    backgroundGradientTo: COLORS.surface,
-    color: (opacity = 1) => `rgba(99, 102, 241, ${opacity})`,
-    labelColor: (opacity = 1) => COLORS.textSecondary,
-  };
-
   return (
     <ScrollView
       style={styles.container}
@@ -180,24 +175,23 @@ export default function Dashboard() {
       </View>
 
       <View style={styles.statsGrid}>
-        <View style={[styles.statCard, styles.statCard1]}>
-          <Text style={styles.statIcon}>🎯</Text>
-          <Text style={styles.statLabel}>Today</Text>
-          <Text style={styles.statValue}>{formatDuration(todayTotal)}</Text>
-          <Text style={styles.statSubtext}>focused time</Text>
-        </View>
+        <StatCard
+          label="Today"
+          value={formatDuration(todayTotal)}
+          subtext="focused time"
+          style={[styles.statCard1]}
+        />
 
-        <View style={[styles.statCard, styles.statCard2]}>
-          <Text style={styles.statIcon}>🏆</Text>
-          <Text style={styles.statLabel}>Total</Text>
-          <Text style={styles.statValue}>{formatMinutes(allTimeTotal)}</Text>
-          <Text style={styles.statSubtext}>minutes</Text>
-        </View>
+        <StatCard
+          label="Total"
+          value={formatMinutes(allTimeTotal)}
+          subtext="minutes"
+          style={[styles.statCard2]}
+        />
       </View>
 
       <View style={[styles.card, styles.distractionsCard]}>
         <View style={styles.cardHeader}>
-          <Text style={styles.cardIcon}>⚠️</Text>
           <Text style={styles.cardTitle}>Distractions</Text>
         </View>
         <Text style={styles.distractionsValue}>{totalDistractions}</Text>
@@ -206,62 +200,9 @@ export default function Dashboard() {
         </Text>
       </View>
 
-      <View style={styles.chartSection}>
-        <Text style={styles.sectionTitle}>Weekly Activity</Text>
-        <View style={styles.chartContainer}>
-          {barData &&
-            barData.datasets &&
-            barData.datasets[0] &&
-            barData.datasets[0].data.every(
-              (d) => typeof d === "number" && !isNaN(d)
-            ) && (
-              <BarChart
-                data={barData}
-                width={Math.max(Dimensions.get("window").width - 40, 300)}
-                height={240}
-                yAxisLabel=""
-                yAxisSuffix=" min"
-                chartConfig={{
-                  backgroundColor: COLORS.surface,
-                  backgroundGradientFrom: COLORS.surface,
-                  backgroundGradientTo: COLORS.surface,
-                  color: (opacity = 1) => `rgba(99, 102, 241, ${opacity})`,
-                  labelColor: () => COLORS.textSecondary,
-                  decimalPlaces: 0,
-                  style: {
-                    borderRadius: 12,
-                  },
-                }}
-                style={{ borderRadius: 12 }}
-              />
-            )}
-        </View>
-      </View>
+      <WeeklyBarChart barData={barData} />
 
-      {pieData &&
-        pieData.length > 0 &&
-        pieData.every(
-          (item) =>
-            item.color &&
-            typeof item.population === "number" &&
-            !isNaN(item.population)
-        ) && (
-          <View style={styles.chartSection}>
-            <Text style={styles.sectionTitle}>Categories Breakdown</Text>
-            <View style={styles.chartContainer}>
-              <PieChart
-                data={pieData}
-                width={Dimensions.get("window").width - 40}
-                height={220}
-                accessor="population"
-                backgroundColor="transparent"
-                paddingLeft="0"
-                chartConfig={chartConfig}
-                absolute
-              />
-            </View>
-          </View>
-        )}
+      <CategoryPieChart pieData={pieData} />
 
       {sessions.length === 0 && (
         <View style={styles.emptyState}>
@@ -305,49 +246,6 @@ const styles = StyleSheet.create({
     gap: 12,
     marginBottom: 20,
   },
-  statCard: {
-    flex: 1,
-    borderRadius: 16,
-    padding: 20,
-    alignItems: "center",
-    borderWidth: 1,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
-  },
-  statCard1: {
-    backgroundColor: COLORS.card1,
-    borderColor: `${COLORS.primary}30`,
-  },
-  statCard2: {
-    backgroundColor: COLORS.card2,
-    borderColor: `${COLORS.success}30`,
-  },
-  statIcon: {
-    fontSize: 32,
-    marginBottom: 8,
-  },
-  statLabel: {
-    fontSize: 12,
-    color: COLORS.textSecondary,
-    fontWeight: "600",
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
-    marginBottom: 8,
-  },
-  statValue: {
-    fontSize: 24,
-    fontWeight: "800",
-    color: COLORS.text,
-    marginBottom: 4,
-  },
-  statSubtext: {
-    fontSize: 11,
-    color: COLORS.textSecondary,
-    fontWeight: "500",
-  },
   card: {
     backgroundColor: COLORS.surface,
     borderRadius: 16,
@@ -390,30 +288,6 @@ const styles = StyleSheet.create({
     fontWeight: "800",
     color: COLORS.danger,
     marginVertical: 8,
-  },
-  chartSection: {
-    marginBottom: 24,
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: "700",
-    color: COLORS.text,
-    marginBottom: 12,
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
-  },
-  chartContainer: {
-    backgroundColor: COLORS.surface,
-    borderRadius: 16,
-    padding: 12,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
   },
   emptyState: {
     alignItems: "center",

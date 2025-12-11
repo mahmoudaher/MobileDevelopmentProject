@@ -9,8 +9,10 @@ import {
   AppState,
   ScrollView,
 } from "react-native";
-import { Picker } from "@react-native-picker/picker";
 import { saveSession } from "../database/db";
+import TimerDisplay from "../../components/TimerDisplay";
+import DistractionCounter from "../../components/DistractionCounter";
+import CategoryPicker from "../../components/CategoryPicker";
 
 const CATEGORIES = [
   { label: "Study", value: "Study" },
@@ -84,9 +86,15 @@ export default function Home() {
   const startTimer = useCallback(() => {
     if (running) return;
 
-    const initSec = durationMinutes * 60;
-    setInitialSeconds(initSec);
-    setSeconds(initSec);
+    if (seconds > 0 && seconds < initialSeconds) {
+      // Resuming from pause, do not reset seconds
+    } else {
+      // Fresh start or after reset/finish
+      const initSec = durationMinutes * 60;
+      setInitialSeconds(initSec);
+      setSeconds(initSec);
+    }
+
     setRunning(true);
     intervalRef.current = setInterval(() => {
       setSeconds((s) => {
@@ -99,7 +107,7 @@ export default function Home() {
         return s - 1;
       });
     }, 1000) as unknown as NodeJS.Timeout;
-  }, [running, durationMinutes]);
+  }, [running, durationMinutes, seconds, initialSeconds]);
 
   const pauseTimer = useCallback(() => {
     if (intervalRef.current) clearInterval(intervalRef.current);
@@ -162,11 +170,6 @@ export default function Home() {
     }
   }, [initialSeconds, category, distractions]);
 
-  const minutes = Math.floor(seconds / 60);
-  const secs = seconds % 60;
-  const progress =
-    initialSeconds > 0 ? (initialSeconds - seconds) / initialSeconds : 0;
-
   return (
     <ScrollView
       style={{ flex: 1, backgroundColor: COLORS.background }}
@@ -181,27 +184,12 @@ export default function Home() {
         <Text style={styles.headerSubtitle}>Stay focused</Text>
       </View>
 
-      <View style={styles.timerCard}>
-        <View style={styles.timerContent}>
-          <Text style={styles.timerLabel}>Time Remaining</Text>
-          <Text style={styles.timer}>
-            {String(minutes).padStart(2, "0")}:{String(secs).padStart(2, "0")}
-          </Text>
-          <Text style={styles.secondsDisplay}>
-            {running
-              ? `${Math.floor((initialSeconds - seconds) / 60)}m ${
-                  (initialSeconds - seconds) % 60
-                }s elapsed`
-              : `${durationMinutes} minutes session`}
-          </Text>
-        </View>
-
-        <View style={styles.progressBar}>
-          <View
-            style={[styles.progressFill, { width: `${progress * 100}%` }]}
-          />
-        </View>
-      </View>
+      <TimerDisplay
+        seconds={seconds}
+        initialSeconds={initialSeconds}
+        running={running}
+        durationMinutes={durationMinutes}
+      />
 
       <View style={styles.card}>
         <Text style={styles.cardLabel}>Session Duration (minutes)</Text>
@@ -215,57 +203,23 @@ export default function Home() {
         />
       </View>
 
-      <View style={styles.card}>
-        <Text style={styles.cardLabel}>Focus Category</Text>
-        <View style={styles.pickerContainer}>
-          <Picker
-            selectedValue={category}
-            onValueChange={(value) => setCategory(value as Category)}
-            style={styles.picker}
-            enabled={!running}
-          >
-            {CATEGORIES.map((cat) => (
-              <Picker.Item
-                key={cat.value}
-                label={` ${cat.label}`}
-                value={cat.value}
-              />
-            ))}
-          </Picker>
-        </View>
-      </View>
+      <CategoryPicker
+        category={category}
+        setCategory={setCategory}
+        running={running}
+      />
 
-      <View style={styles.card}>
-        <Text style={styles.cardLabel}>Distractions Counted</Text>
-        <View style={styles.distractionsBox}>
-          <TouchableOpacity
-            style={[styles.counterButton, styles.decreaseBtn]}
-            onPress={() => setDistractions(Math.max(0, distractions - 1))}
-            disabled={running || distractions === 0}
-          >
-            <Text style={styles.counterButtonText}>−</Text>
-          </TouchableOpacity>
-
-          <View style={styles.distractionsDisplay}>
-            <Text style={styles.distractionsValue}>{distractions}</Text>
-            <Text style={styles.distractionsLabel}>times</Text>
-          </View>
-
-          <TouchableOpacity
-            style={[styles.counterButton, styles.increaseBtn]}
-            onPress={() => setDistractions(distractions + 1)}
-            disabled={running}
-          >
-            <Text style={styles.counterButtonText}>+</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
+      <DistractionCounter
+        distractions={distractions}
+        setDistractions={setDistractions}
+        running={running}
+      />
 
       <View style={styles.buttonGroup}>
         <TouchableOpacity
           style={[
             styles.button,
-            running ? styles.buttonPause : styles.buttonStart,
+            styles.buttonStart,
             isLoading && styles.buttonDisabled,
           ]}
           onPress={running ? pauseTimer : startTimer}
@@ -318,50 +272,6 @@ const styles = StyleSheet.create({
     color: COLORS.textSecondary,
     fontWeight: "500",
   },
-  timerCard: {
-    backgroundColor: `${COLORS.primary}15`,
-    borderLeftWidth: 4,
-    borderLeftColor: COLORS.primary,
-    borderRadius: 16,
-    padding: 24,
-    marginBottom: 30,
-    borderWidth: 1,
-    borderColor: `${COLORS.primary}30`,
-  },
-  timerContent: {
-    alignItems: "center",
-    marginBottom: 16,
-  },
-  timerLabel: {
-    fontSize: 12,
-    color: COLORS.textSecondary,
-    fontWeight: "600",
-    textTransform: "uppercase",
-    letterSpacing: 0.8,
-    marginBottom: 8,
-  },
-  timer: {
-    fontSize: 72,
-    fontWeight: "800",
-    color: COLORS.primary,
-    fontVariant: ["tabular-nums"],
-  },
-  secondsDisplay: {
-    fontSize: 14,
-    color: COLORS.textSecondary,
-    marginTop: 8,
-    fontWeight: "500",
-  },
-  progressBar: {
-    height: 6,
-    backgroundColor: `${COLORS.primary}20`,
-    borderRadius: 3,
-    overflow: "hidden",
-  },
-  progressFill: {
-    height: "100%",
-    backgroundColor: COLORS.primary,
-  },
   card: {
     backgroundColor: COLORS.surface,
     borderRadius: 16,
@@ -383,17 +293,6 @@ const styles = StyleSheet.create({
     textTransform: "uppercase",
     letterSpacing: 0.5,
   },
-  pickerContainer: {
-    backgroundColor: COLORS.background,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    overflow: "hidden",
-  },
-  picker: {
-    height: 50,
-    color: COLORS.text,
-  },
   input: {
     height: 50,
     borderWidth: 1,
@@ -403,52 +302,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: COLORS.text,
     backgroundColor: COLORS.background,
-  },
-  distractionsBox: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    backgroundColor: COLORS.background,
-    borderRadius: 12,
-    padding: 12,
-  },
-  counterButton: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
-    justifyContent: "center",
-    alignItems: "center",
-    fontWeight: "bold",
-  },
-  decreaseBtn: {
-    backgroundColor: `${COLORS.danger}15`,
-    borderWidth: 1,
-    borderColor: COLORS.danger,
-  },
-  increaseBtn: {
-    backgroundColor: `${COLORS.success}15`,
-    borderWidth: 1,
-    borderColor: COLORS.success,
-  },
-  counterButtonText: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: COLORS.text,
-  },
-  distractionsDisplay: {
-    alignItems: "center",
-    flex: 1,
-  },
-  distractionsValue: {
-    fontSize: 40,
-    fontWeight: "800",
-    color: COLORS.primary,
-  },
-  distractionsLabel: {
-    fontSize: 12,
-    color: COLORS.textSecondary,
-    marginTop: 4,
-    fontWeight: "500",
   },
   buttonGroup: {
     flexDirection: "row",
