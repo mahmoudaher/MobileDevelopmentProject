@@ -169,7 +169,11 @@ export default function Home() {
   return (
     <ScrollView
       style={{ flex: 1, backgroundColor: COLORS.background }}
-      contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 12, paddingBottom: 40 }}
+      contentContainerStyle={{
+        paddingHorizontal: 16,
+        paddingTop: 12,
+        paddingBottom: 40,
+      }}
     >
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Focus Timer</Text>
